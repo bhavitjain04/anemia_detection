@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale = 1.0">
+    <title> Anaemia Detection Website </title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://kit.fontawesome.com/4fcda01787.js" crossorigin="anonymous"></script>
+    <script>
+        /*import fetch from "node-fetch";*/
+        async function getUsers() {
+            let response = await fetch('https://anemia2testing.herokuapp.com');
+            let data = await response.json();
+            return data;
+        }
+        getUsers().then(data => {
+            console.log(data)
+        })
+    </script>
+
+</head>
+
+<body>
+
+    <section class="sub-header">
+        <nav>
+            <a href="index.html"><img src="https://shashvat-bargale.github.io/golden_hawks.github.io/Images/logo_1.png">
+            </a>
+            <div class="nav-links">
+                <i class="fa-solid fa-xmark"></i>
+                <ul>
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="about.html">ABOUT</a></li>
+                    <li><a href="algorithm.html">ALGORITHM</a></li>
+                    <li><a href="contact.html">CONTACT</a></li>
+                </ul>
+            </div>
+            <i class="fa-solid fa-bars"></i>
+        </nav>
+        <h1>Upload the Patient's Image</h1>
+    </section>
+
+    <div class="row_1">
+        <p>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+        </p>
+        {% if filename %}
+        <div style="padding:20px">
+            <img src="{{ url_for('display_image', filename=filename) }}">
+        </div>
+        {% endif %}
+    </div>
+    <form method="POST" action="http://localhost:5001/result" enctype="multipart/form-data">
+         <input type = "file" name = "file" />
+         <input type = "submit"/>
+    </form>
+
+</body>
+
+</html>
