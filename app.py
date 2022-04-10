@@ -4,10 +4,33 @@ from flask import Flask, render_template, request
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-
+from flask_sqlalchemy import SQLAlchemy
+import sqlite3
+import base64
+import io
+from PIL import Image
 
 app = Flask(__name__)
 
+app.config['SQLALCHEMY_DATABASE_URI']= "sqlite:///anaemic.db"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']= False
+db = SQLAlchemy(app)
+
+class Upload(db.Model):
+	id= db.Column(db.Integer, primary_key=True)
+	filename= db.Column(db.String(50))
+	data= db.Column(db.LargeBinary)
+
+def get_db_connection():
+    conn = sqlite3.connect('anaemic.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def writeTofile(data,filename):
+	with open(filename,'wb') as file:
+		a=file.write(data)
+		return a
+	print('Sorted blob data into: ', filename, '\n')
 
 @app.route("/")
 @app.route("/home")
@@ -19,14 +42,41 @@ def home():
 def result():
     print("abcd")
     f = request.files['file']
-    f.save("C:\\Users\\BHAVIT JAIN\\Desktop\\FlaskApp"+"\\test.jpg")
+    file = base64.b64encode(f.read())
+    upload= Upload(filename=f.filename, data= file)
+    db.session.add(upload)
+    db.session.commit()
+    print(f'Uploaded:{f.filename}')
+    #f.save("C:\\Users\\BHAVIT JAIN\\Desktop\\FlaskApp"+"\\test.jpg")
     
     return model()
 
 def model():
 	print("1")
-	image = cv2.imread(r'C:\\Users\\BHAVIT JAIN\\Desktop\\FlaskApp\\test.jpg')
+	connect = get_db_connection()
+	record = connect.execute('SELECT * FROM upload ORDER BY id DESC LIMIT 1').fetchall()
+	for row in record:
+		print('ID:',row[0], 'filename:', row[1])
+		name=row[1]
+		e_img= row[2]
+		binary_data = base64.b64decode(e_img)
+		image = Image.open(io.BytesIO(binary_data))
+		image.show()
+		#print(eyes.format)
+		#e_img_path= 'C:\\Users\\BHAVIT JAIN\\Desktop\\FlaskApp\\testimg.jpg'
+		#writeTofile(e_img,e_img_path)
+
+	#connect.close()
+	#print('conn closed')
+
+
+	#__,enc = cv2.imencode('.jpg',e_img)
+	#connect.execute("insert into images values(?,?)",("patient",buffer(enc)))
+	#db.commit()
+	#image = cv2.imread('C:\\Users\\BHAVIT JAIN\\Desktop\\FlaskApp\\testimg.jpg')
+	#image.show()
 	# create a mask image of the same shape as input image, filled with 0s (black color)
+	image= np.array(image)
 	mask = np.zeros_like(image)
 	rows, cols,_ = mask.shape
 	# create a white filled ellipse
